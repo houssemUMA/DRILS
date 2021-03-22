@@ -39,13 +39,20 @@ public class Main {
 	List<Integer> pX = new ArrayList<Integer>();
 	List<Integer> best_solution = new ArrayList<Integer>();
 	List<Integer> clusters = new ArrayList<Integer>();
-	List<Integer> clustersOfPx = new ArrayList<Integer>();
+	private Crossover crossoverOperator;
 
 
+	public Main (String cross) {
+		if ("dummy".equals(cross)) {
+			crossoverOperator = new DummyCrossover();
+		} else if ("cluster".equals(cross)) {
+			crossoverOperator = new ClusterCrossover(this);
+		}
+	}
 
 	public static void main(String[] args) {
 
-		Main test= new Main();
+		Main test= new Main(args[0]);
 		test.run_one_tine();
 		test.generateRandomSet();
 		test.allStepsToMakeRandomSoltuion();
@@ -90,7 +97,7 @@ public class Main {
 		allStepsToMakeRandomSoltuion();
 		local_search (secondSolution);
 		display();
-		crossover(solution,secondSolution);
+		List<Integer> clustersOfPx = crossoverOperator.crossover(solution,secondSolution);
 		randomSet.clear();
 		randomSet.addAll(clustersOfPx);
 		allStepsToMakeRandomSoltuion();
@@ -105,87 +112,6 @@ public class Main {
 		System.out.println(secondSolution);
 	}
 
-
-
-
-	public void crossover(List<Integer> pSolutionOne,List<Integer> pSolutionTwo) {
-		List<Integer> uniqueElementsWinnerOne = new ArrayList<Integer>();
-		List<Integer> uniqueElementsWinnerTwo = new ArrayList<Integer>();
-		List<Integer> commonlElementsOrderOne = new ArrayList<Integer>();
-		//		List<Integer> commonlElementsOrderTwo = new ArrayList<Integer>();
-
-		uniqueElementsWinnerOne.addAll(pSolutionOne);
-		uniqueElementsWinnerOne.removeAll(pSolutionTwo);
-		System.out.println("uniqueElementsWinnerOne are "+uniqueElementsWinnerOne);
-
-		System.out.println();
-
-		uniqueElementsWinnerTwo.addAll(pSolutionTwo);
-		uniqueElementsWinnerTwo.removeAll(pSolutionOne);
-		System.out.println("uniqueElementsWinnerTwo are "+uniqueElementsWinnerTwo);
-
-		System.out.println();
-
-		commonlElementsOrderOne.addAll(pSolutionOne);		
-		commonlElementsOrderOne.retainAll(pSolutionTwo);
-		System.out.println("commonlElements order one "+commonlElementsOrderOne);
-
-		//		System.out.println();
-
-		//		commonlElementsOrderTwo.addAll(pSolutionTwo);		
-		//		commonlElementsOrderTwo.retainAll(pSolutionOne);
-		//		System.out.println("commonlElements order two "+commonlElementsOrderTwo);
-
-
-		//		/*
-		//		 *  if we have only 4 common elements or less, we don't need to do the crossover, 
-		//		 *  we just add the unique elements in the genome .
-		//		 *  we consider the origin as a two common elements
-		//		 */
-		//		if (commonlElementsOrderOne.size()>=3) {
-		//			
-		//			if (!commonlElementsOrderOne.equals(commonlElementsOrderTwo )) {
-		//				
-		//				Random r = new Random();
-		//				int crosspoint = r.nextInt(commonlElementsOrderOne.size()-2)+1;
-		//				System.out.println("crosspoint "+crosspoint);
-		//				
-		//			}
-		//		}
-		//		
-
-
-		generatePx(uniqueElementsWinnerOne,uniqueElementsWinnerTwo,commonlElementsOrderOne);
-	}
-
-	public void generatePx(List<Integer> pathOne,List<Integer> pathTwo,List<Integer> pathOnecommonPoint) {
-		List<Integer> one = new ArrayList<Integer>();
-		List<Integer> two = new ArrayList<Integer>();
-		List<Integer> three = new ArrayList<Integer>();
-
-		verify_clear_list(clustersOfPx);
-		one.addAll(get_clusters_from_path(pathOne));
-		two.addAll(get_clusters_from_path(pathTwo));
-		three.addAll(get_clusters_from_path(pathOnecommonPoint));
-
-		clustersOfPx.addAll(three);
-		clustersOfPx.addAll(1,one);
-		for (int i=0; i<two.size();i++) {
-			if(!clustersOfPx.contains(two.get(i))) {
-				clustersOfPx.add(1,two.get(i) );
-			}
-		}
-		System.out.println("clustersOfPx");
-		System.out.println(clustersOfPx);
-		for (int i =1;i<set_number;i++) {
-			if(!clustersOfPx.contains(i)) {
-				clustersOfPx.add(1,i);
-			}
-		}
-		System.out.println("new clustersOfPx");
-		System.out.println(clustersOfPx);
-
-	}
 
 
 	public void local_search (List<Integer> pSolution) {
@@ -425,9 +351,7 @@ public class Main {
 	}
 
 	private void verify_clear_list(List<Integer> list) {
-		if (list.size() > 0) {
-			list.clear();
-		}
+		list.clear();
 	}
 
 	private int findNearstPoint(int pointA, int clusterB) {
@@ -567,17 +491,6 @@ public class Main {
 
 	}
 
-	public List<Integer> get_clusters_from_path(List<Integer> pSolution) {
-		List<Integer> path_of_clusters = new ArrayList<Integer>();
-		int a;
-		for (int i = 0; i < pSolution.size(); i++) {
-			a = points_cluster[pSolution.get(i)];
-			path_of_clusters.add(a);
-		}
-		System.out.println(path_of_clusters);
-		return path_of_clusters;
-	}
-
 	public void compare_results(List<Integer> pSolution) {
 		double score =calculate_path_profit(pSolution);
 		//		System.out.println("the score before comparision "+ score);
@@ -590,6 +503,14 @@ public class Main {
 		}
 		//		solution.clear();
 
+	}
+
+	public int getSet_number() {
+		return set_number;
+	}
+
+	public int[] getPoints_cluster() {
+		return points_cluster;
 	}
 
 
